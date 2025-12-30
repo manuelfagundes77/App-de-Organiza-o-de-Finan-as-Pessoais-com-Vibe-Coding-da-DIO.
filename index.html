@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Dashboard Pro</title>
+    <style>
+        :root {
+            --sidebar-bg: #1e293b;
+            --main-bg: #f8fafc;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #334155;
+            --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--main-bg);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 320px;
+            background-color: var(--sidebar-bg);
+            color: white;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        aside h2 { font-size: 1.2rem; margin-bottom: 25px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+        .input-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #cbd5e1; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #334155;
+            color: white;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        input:focus { border-color: var(--accent); outline: none; }
+
+        button.btn-add {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: filter 0.2s;
+        }
+
+        button.btn-add:hover { filter: brightness(1.1); }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+        }
+
+        .header-dashboard { margin-bottom: 30px; }
+        .header-dashboard h1 { margin: 0; font-size: 1.8rem; }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-label { font-size: 0.9rem; color: #64748b; margin-bottom: 10px; display: block; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; }
+
+        /* Categorias e Detalhamento */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card-white {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .category-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .details-list { margin-top: 15px; }
+        .category-block { margin-bottom: 20px; }
+        .category-tag {
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: #475569;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .positive { color: var(--success); }
+        .negative { color: var(--danger); }
+        .neutral { color: var(--accent); }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <h2>Configurações</h2>
+        <div class="input-group">
+            <label>Renda Mensal (R$)</label>
+            <input type="number" id="incomeInput" placeholder="0,00" oninput="updateUI()">
+        </div>
+
+        <h2 style="margin-top: 40px;">Novo Gasto</h2>
+        <div class="input-group">
+            <label>Descrição</label>
+            <input type="text" id="descInput" placeholder="Ex: Aluguel">
+        </div>
+        <div class="input-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="valueInput" placeholder="0,00">
+        </div>
+        <div class="input-group">
+            <label>Categoria</label>
+            <select id="categoryInput">
+                <option value="Moradia">Moradia</option>
+                <option value="Alimentação">Alimentação</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Lazer">Lazer</option>
+                <option value="Outros">Outros</option>
+            </select>
+        </div>
+        <button class="btn-add" onclick="addExpense()">Adicionar Gasto</button>
+    </aside>
+
+    <main>
+        <div class="header-dashboard">
+            <h1>Visão Geral</h1>
+        </div>
+
+        <div class="grid-stats">
+            <div class="stat-card">
+                <span class="stat-label">Renda Total</span>
+                <span id="statIncome" class="stat-value neutral">R$ 0,00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Total Gasto</span>
+                <span id="statExpense" class="stat-value negative">R$ 0,00</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Saldo Disponível</span>
+                <span id="statBalance" class="stat-value positive">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <div class="card-white">
+                <h3>Gastos por Categoria</h3>
+                <div id="categorySummary">
+                    <p style="color: #94a3b8;">Nenhum gasto registrado.</p>
+                </div>
+            </div>
+
+            <div class="card-white">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Histórico Detalhado</h3>
+                    <button id="toggleBtn" onclick="toggleDetails()" style="font-size: 0.8rem; cursor: pointer; background: none; border: 1px solid #ddd; padding: 5px 10px; border-radius: 5px;">Esconder Itens</button>
+                </div>
+                <div id="detailsSection" class="details-list">
+                    </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+    let expenses = [];
+    const categories = ["Moradia", "Alimentação", "Transporte", "Lazer", "Outros"];
+
+    function addExpense() {
+        const desc = document.getElementById('descInput').value;
+        const val = parseFloat(document.getElementById('valueInput').value);
+        const cat = document.getElementById('categoryInput').value;
+
+        if (!desc || isNaN(val)) return;
+
+        expenses.push({ description: desc, value: val, category: cat });
+        document.getElementById('descInput').value = '';
+        document.getElementById('valueInput').value = '';
+        updateUI();
+    }
+
+    function updateUI() {
+        const income = parseFloat(document.getElementById('incomeInput').value) || 0;
+        let totalExpenses = 0;
+
+        // 1. Calcular aglomerados por categoria
+        const summaryDiv = document.getElementById('categorySummary');
+        summaryDiv.innerHTML = '';
+        
+        categories.forEach(cat => {
+            const totalCat = expenses
+                .filter(e => e.category === cat)
+                .reduce((acc, curr) => acc + curr.value, 0);
+            
+            totalExpenses += totalCat;
+
+            if (totalCat > 0) {
+                summaryDiv.innerHTML += `
+                    <div class="category-row">
+                        <span>${cat}</span>
+                        <span class="negative">R$ ${totalCat.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                    </div>
+                `;
+            }
+        });
+
+        if (expenses.length === 0) {
+            summaryDiv.innerHTML = '<p style="color: #94a3b8;">Nenhum gasto registrado.</p>';
+        }
+
+        // 2. Atualizar Cards de Estatísticas
+        const balance = income - totalExpenses;
+        document.getElementById('statIncome').innerText = `R$ ${income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        document.getElementById('statExpense').innerText = `R$ ${totalExpenses.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        
+        const balanceEl = document.getElementById('statBalance');
+        balanceEl.innerText = `R$ ${balance.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+        balanceEl.className = `stat-value ${balance >= 0 ? 'positive' : 'negative'}`;
+
+        // 3. Detalhamento por Categoria
+        const detailedListEl = document.getElementById('detailsSection');
+        detailedListEl.innerHTML = '';
+
+        categories.forEach(cat => {
+            const catItems = expenses.filter(e => e.category === cat);
+            if (catItems.length > 0) {
+                let catHtml = `<div class="category-block"><span class="category-tag">${cat}</span>`;
+                catItems.forEach(item => {
+                    catHtml += `
+                        <div class="item-row">
+                            <span>${item.description}</span>
+                            <span class="negative">- R$ ${item.value.toFixed(2)}</span>
+                        </div>
+                    `;
+                });
+                catHtml += `</div>`;
+                detailedListEl.innerHTML += catHtml;
+            }
+        });
+    }
+
+    function toggleDetails() {
+        const section = document.getElementById('detailsSection');
+        const btn = document.getElementById('toggleBtn');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            btn.innerText = 'Esconder Itens';
+        } else {
+            section.style.display = 'none';
+            btn.innerText = 'Mostrar Itens';
+        }
+    }
+</script>
+</body>
+</html>
